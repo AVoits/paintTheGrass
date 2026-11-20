@@ -1,0 +1,44 @@
+.form {
+    width: 800px;
+    margin: 20px auto;
+}
+
+.block {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+
+.block > * {
+    flex: 1 1 auto;
+}
+
+.actionIcon {
+    font-size: 24px;
+    line-height: 30px;
+}
+.wrapper {
+    width: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.formLine {
+    display: flex;
+}
+
+.addButton {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.divider {
+    color: var(--ant-green);
+}
+
+.errorBlock {
+    display: block;
+    padding-bottom: 12px;
+}

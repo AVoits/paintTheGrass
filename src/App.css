@@ -1,0 +1,45 @@
+html {
+  color-scheme: dark;
+  font-family: system-ui;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  margin: 0;
+  padding: 0;
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+
+.iconRed {
+  font-size:48px;
+  color:  var(--ant-red);
+  transform: rotate(90deg);
+ }
+
+.iconGreen {
+  font-size: 48px;
+  color: var(--ant-green);
+  transform: rotate(-90deg);
+ }
+
+.gradient-text {
+  text-transform: uppercase;
+  margin: 0;
+  background: linear-gradient(90deg,  var(--ant-red), var(--ant-green));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.gradient-line {
+  height: 1px;
+  background: linear-gradient(90deg,  var(--ant-red), var(--ant-green));
+}

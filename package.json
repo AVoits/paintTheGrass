@@ -1,0 +1,35 @@
+{
+  "name": "parcel-react-client-starter",
+  "private": true,
+  "version": "0.0.0",
+  "source": "src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "antd": "^6.7.1",
+    "dayjs": "^1.11.23",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "parcel": "^2.14.0",
+    "prettier": "^3.10.1",
+    "typescript-eslint": "^8.73.0"
+  },
+  "alias": {
+    "@rc-component/pagination/locale/en_US": "@rc-component/pagination/es/locale/en_US.js",
+    "@rc-component/pagination/locale/ru_RU": "@rc-component/pagination/es/locale/ru_RU.js"
+  }
+}
