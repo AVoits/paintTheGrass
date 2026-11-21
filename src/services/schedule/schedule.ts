@@ -30,9 +30,8 @@ import { productionCalendarData } from '../productionCalendar/productionCalendar
  * 1н = 40 часов
  */
 const parseDuration = (value: string): number => {
-  console.log('parseDuration', value);
-  const normalizedValue = value.replace(/\s+/g, '');
-  const match = normalizedValue.match(/^(?:(\d+)н)?(?:(\d+)д)?(?:(\d+)ч)?$/);
+  const normalizedValue = value?.replace(/\s+/g, '');
+  const match = normalizedValue?.match(/^(?:(\d+)н)?(?:(\d+)д)?(?:(\d+)ч)?$/);
 
   if (!match) {
     throw new Error(`Некорректная длительность: "${value}"`);
@@ -103,10 +102,10 @@ const buildWorkRuns = (
     currentRun = [];
   };
 
-  let date = periodStart.startOf('day');
-  const endDate = periodEnd.startOf('day');
+  let date = periodStart?.startOf('day');
+  const endDate = periodEnd?.startOf('day');
 
-  while (date.isBefore(endDate) || date.isSame(endDate, 'day')) {
+  while (date?.isBefore(endDate) || date?.isSame(endDate, 'day')) {
     if (isWorkingDay(date, calendar)) {
       currentRun.push(date);
     } else {
@@ -129,10 +128,10 @@ const buildWorkRuns = (
  * Преобразует входные задачи в задачи с длительностью в часах.
  */
 const prepareTasks = (tasks: TaskInput[]): IndexedTask[] => {
-  return tasks.map((task, originalIndex) => ({
+  return tasks?.map((task, originalIndex) => ({
     ...task,
     originalIndex,
-    durationHours: parseDuration(task.duration),
+    durationHours: parseDuration(task?.duration),
   }));
 };
 
@@ -254,7 +253,7 @@ export const distributeTasks = ({
   // Validation
   // --------------------------------------------------
 
-  if (periodEnd.startOf('day').isBefore(periodStart.startOf('day'))) {
+  if (periodEnd?.startOf('day').isBefore(periodStart?.startOf('day'))) {
     throw new Error('Дата окончания периода раньше даты начала.');
   }
 
@@ -274,7 +273,7 @@ export const distributeTasks = ({
 
   const preparedTasks = prepareTasks(tasks);
 
-  const requestedHours = preparedTasks.reduce((sum, task) => sum + task.durationHours, 0);
+  const requestedHours = preparedTasks?.reduce((sum, task) => sum + task.durationHours, 0);
 
   // --------------------------------------------------
   // Allocate tasks
@@ -300,6 +299,8 @@ export const distributeTasks = ({
       start: start.date,
       end: end.date,
 
+      color: task.color ?? 'blue',
+
       startHour: start.hour,
       endHour: end.hour,
 
@@ -321,9 +322,10 @@ export const distributeTasks = ({
 
   const unscheduled = preparedTasks
     .filter((task) => !allocatedIndexes.has(task.originalIndex))
-    .map(({ name, duration }) => ({
+    .map(({ name, duration, color }) => ({
       name,
       duration,
+      color,
     }));
 
   // --------------------------------------------------
@@ -351,9 +353,8 @@ export const distributeTasks = ({
     warnings.push({
       type: 'overflow',
       message:
-        `Не удалось разместить ${unscheduled.length} задач ` +
-        `(${unscheduled.map((task) => task.name).join(', ')}). ` +
-        `Длительность задач не изменена.`,
+        `Не удалось разместить: ${unscheduled.length} ` +
+        `(${unscheduled.map((task) => task.name).join(', ')}). `,
     });
   }
 

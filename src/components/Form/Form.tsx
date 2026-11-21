@@ -1,47 +1,47 @@
-import React from 'react';
-import { Alert, DatePicker, DatePickerProps, Divider, FormProps, Radio, Tag, theme } from 'antd';
+import React, { useMemo } from 'react';
+import {
+  Alert,
+  ColorPicker,
+  DatePicker,
+  DatePickerProps,
+  Divider,
+  FormProps,
+  Radio,
+  Tag,
+  theme,
+} from 'antd';
 import { Button, Form, Input } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const { RangePicker } = DatePicker;
 
 import './form.css';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { getProductionState } from '../../services/productionCalendar/helpers.ts';
 import { durationTaskOptions } from './form.const.ts';
-import { TaskInput } from '../../services/schedule/schedule.types.ts';
+import { createTaskColorGenerator } from '../../services/schedule/taskColorGenerator.ts';
+import { FieldData } from '@rc-component/form/es/interface';
+import { Color } from 'antd/lib/color-picker';
+
+export type FormTaskInput = {
+  name: string;
+  duration: string;
+  color: Color;
+};
 
 export type FieldType = {
   sprint: Dayjs[];
-  tasks: TaskInput[];
+  tasks: FormTaskInput[];
 };
 
 interface FormBlockProps {
-  onFinish: (values: FieldType) => void;
+  onValuesChange: (values: FieldType, isFormValid: boolean) => void;
 }
 
-const initialTestData: FieldType = {
-  sprint: [dayjs(), dayjs().add(14, 'd')],
-  tasks: [
-    { name: '111', duration: '4ч' },
-    { name: '222', duration: '2д 4ч' },
-    { name: '333', duration: '1д' },
-    { name: '444', duration: '1д 4ч' },
-  ],
-};
-
-const FormBlock = ({ onFinish }: FormBlockProps) => {
+const FormBlock = ({ onValuesChange }: FormBlockProps) => {
   const { token } = theme.useToken();
-
-  const onFinishForm: FormProps<FieldType>['onFinish'] = (values) => {
-    console.log('Success:', values);
-    onFinish(values);
-  };
-
-  const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
-    console.log('Failed:', errorInfo);
-  };
-
+  const colorGenerator = useMemo(() => createTaskColorGenerator(token), [token]);
+  const [form] = Form.useForm<FieldType>();
   const styleHolidays: React.CSSProperties = {
     backgroundColor: `${token.green}`,
   };
@@ -84,19 +84,18 @@ const FormBlock = ({ onFinish }: FormBlockProps) => {
     );
   };
 
+  const onFormChange = () => {
+    const isFormValid = form.getFieldsError().every(({ errors }) => errors.length === 0);
+    const formCurrent = form.getFieldsValue(true);
+    onValuesChange(formCurrent, isFormValid);
+  };
+
   return (
-    <Form
-      name="basic"
-      initialValues={initialTestData}
-      onFinish={onFinishForm}
-      onFinishFailed={onFinishFailed}
-      autoComplete="off"
-      className="form"
-    >
+    <Form<FieldType> autoComplete="off" className="form" form={form} onValuesChange={onFormChange}>
       <Form.Item<FieldType>
         label={'Спринт'}
         name={'sprint'}
-        required={true}
+        required={false}
         rules={[{ required: true, message: 'Выберите длительность спринта' }]}
       >
         <RangePicker style={{ width: '100%' }} format="DD/MM/YYYY" cellRender={cellRender} />
@@ -123,22 +122,24 @@ const FormBlock = ({ onFinish }: FormBlockProps) => {
             <>
               {fields.map(({ key, name, ...restField }, index) => (
                 <div key={key} className="block">
-                  <Tag variant="outlined" style={{ flexGrow: 0 }}>
-                    {index + 1}
-                  </Tag>
+                  <Tag variant="outlined">{index + 1}</Tag>
                   <Form.Item
                     {...restField}
                     name={[name, 'name']}
                     required={true}
                     rules={[{ required: true, message: 'Укажите название задачи' }]}
                   >
-                    <Input placeholder="Название задачи, например 101010" />
+                    <Input placeholder="Название задачи" />
+                  </Form.Item>
+                  <Form.Item {...restField} name={[name, 'color']}>
+                    <ColorPicker size="small" />
                   </Form.Item>
                   <Form.Item
                     {...restField}
                     required={true}
                     name={[name, 'duration']}
                     rules={[{ required: true, message: 'Укажите длительность задачи' }]}
+                    className="block_grow"
                   >
                     <Radio.Group
                       block
@@ -153,7 +154,6 @@ const FormBlock = ({ onFinish }: FormBlockProps) => {
                     variant="filled"
                     icon={<DeleteOutlined />}
                     onClick={() => remove(name)}
-                    style={{ flexGrow: 0 }}
                   />
                 </div>
               ))}
@@ -162,7 +162,10 @@ const FormBlock = ({ onFinish }: FormBlockProps) => {
                 <Button
                   color="default"
                   variant="solid"
-                  onClick={() => add()}
+                  onClick={() => {
+                    const color = colorGenerator.getNext();
+                    add({ color });
+                  }}
                   icon={<PlusOutlined />}
                 >
                   Добавить задачу
@@ -172,11 +175,11 @@ const FormBlock = ({ onFinish }: FormBlockProps) => {
           );
         }}
       </Form.List>
-      <Form.Item label={null}>
-        <Button htmlType="submit" color="green" variant="solid">
-          Рассчитать календарь
-        </Button>
-      </Form.Item>
+      {/*<Form.Item label={null}>*/}
+      {/*  <Button htmlType="submit" color="green" variant="solid">*/}
+      {/*    Рассчитать календарь*/}
+      {/*  </Button>*/}
+      {/*</Form.Item>*/}
     </Form>
   );
 };

@@ -1,8 +1,9 @@
 import { Dayjs } from 'dayjs';
-
+import { FormTaskInput } from '../../components/Form/Form.tsx';
 export type TaskInput = {
   name: string;
   duration: string;
+  color: string;
 };
 
 export type WorkRun = {
@@ -23,6 +24,7 @@ export type ScheduledTask = {
   start: Dayjs;
   end: Dayjs;
 
+  color: string;
   startHour: number;
   endHour: number;
 
@@ -39,7 +41,6 @@ export type PeriodCalendar = {
   workingWeekends: Set<string>;
   shortDays: Set<string>;
 };
-
 
 export type ScheduleResult = {
   tasks: ScheduledTask[];

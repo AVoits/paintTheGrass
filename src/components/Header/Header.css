@@ -1,0 +1,20 @@
+.iconRed {
+    font-size:48px;
+    color:  var(--ant-red);
+    transform: rotate(90deg);
+}
+
+.iconGreen {
+    font-size: 48px;
+    color: var(--ant-green);
+    transform: rotate(-90deg);
+}
+
+.gradient-text {
+    text-transform: uppercase;
+    margin: 0;
+    background: linear-gradient(90deg,  var(--ant-red), var(--ant-green));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}

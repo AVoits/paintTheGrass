@@ -11,9 +11,12 @@
 }
 
 .block > * {
-    flex: 1 1 auto;
+    flex-grow: 0;
 }
 
+.block_grow {
+    flex: 1 1 auto;
+}
 .actionIcon {
     font-size: 24px;
     line-height: 30px;

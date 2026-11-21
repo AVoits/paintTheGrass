@@ -1,76 +1,82 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ConfigProvider, Flex, theme } from 'antd';
-
-import { FormatPainterFilled } from '@ant-design/icons';
+import React, { useMemo, useState } from 'react';
 
 import locale from 'antd/locale/ru_RU';
 import './App.css';
 import LayoutBlock from './components/Layout/Layout.tsx';
 import FormBlock, { FieldType } from './components/Form/Form.tsx';
-import { ThemeConfig } from 'antd/es/config-provider/context';
 import { distributeTasks } from './services/schedule/schedule.ts';
-import { CalendarBlock } from './components/Calendar/Calendar.tsx';
-import { ScheduleFullResult } from './services/schedule/schedule.types.ts';
+import { ScheduleFullResult, TaskInput } from './services/schedule/schedule.types.ts';
+import TaskCalendarBlock from './components/TaskCalendar/TaskCalendarBlock.tsx';
+import Header from './components/Header/Header.tsx';
+import Footer from './components/Footer/Footer.tsx';
+import { Alert, Button, ConfigProvider } from 'antd';
+import { themeConfig } from './themeConfig.ts';
+import { DownloadOutlined } from '@ant-design/icons';
 
 export function App() {
-  const [scheduleResult, setScheduleResult] = useState<ScheduleFullResult>();
+  const [formData, setFormData] = useState<FieldType>({
+    sprint: [],
+    tasks: [],
+  });
 
-  const header = useMemo(() => {
-    return (
-      <Flex gap="medium" align="center" justify="space-around">
-        <FormatPainterFilled className="iconRed" />
-        <h1 className="gradient-text">Paint the grass</h1>
-        <FormatPainterFilled className="iconGreen" />
-      </Flex>
-    );
-  }, []);
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
-  const footer = useMemo(() => {
-    return <div className="gradient-line"></div>;
-  }, []);
+  const scheduleResult = useMemo((): ScheduleFullResult | undefined => {
+    if (!isFormValid) {
+      return undefined;
+    }
 
-  const tc: ThemeConfig = {
-    algorithm: theme.defaultAlgorithm,
-    components: {
-      Layout: {
-        headerBg: '#232323',
-      },
-    },
-    token: {
-      colorPrimary: '#3a3a3a',
-      colorInfo: '#3a3a3a',
-    },
-  };
+    const periodStart = formData?.sprint?.[0];
+    const periodEnd = formData?.sprint?.[1];
 
-  const getDistributedTasks = useCallback((values: FieldType) => {
-    const periodStart = values.sprint[0];
-    const periodEnd = values.sprint[1];
-
-    const result = distributeTasks({
-      tasks: values.tasks,
-      periodStart: values.sprint[0],
-      periodEnd: values.sprint[1],
+    const colorTasks: TaskInput[] = formData?.tasks?.map(({ color: colorSrc, duration, name }) => {
+      return {
+        duration,
+        name,
+        color: typeof colorSrc === 'string' ? colorSrc : colorSrc.toCssString(),
+      };
     });
 
-    setScheduleResult({ ...result, periodStart, periodEnd });
-  }, []);
+    const result = distributeTasks({
+      tasks: colorTasks?.filter((el) => Boolean(el.duration && el.name)),
+      periodStart,
+      periodEnd,
+    });
+
+    return { ...result, periodStart, periodEnd };
+  }, [formData.sprint, formData.tasks, isFormValid]);
+
+  const onFormChange = (values: FieldType, isFormValid: boolean) => {
+    setFormData(values);
+    setIsFormValid(isFormValid);
+  };
 
   const warningBlock = useMemo(() => {
     if (!scheduleResult?.warnings?.length) {
-      return null;
+      return <Alert title={'Заполните данные для расчета'} type="success" />;
     }
 
     return scheduleResult?.warnings.map((warning, index) => {
       return <Alert title={warning.message} type="error" key={index} />;
     });
   }, [scheduleResult]);
-
   return (
-    <ConfigProvider locale={locale} theme={tc}>
-      <LayoutBlock header={header} footer={footer}>
-        <FormBlock onFinish={getDistributedTasks} />
-        {warningBlock}
-        {scheduleResult && <CalendarBlock schedule={scheduleResult} />}
+    <ConfigProvider locale={locale} theme={themeConfig}>
+      <LayoutBlock header={<Header />} footer={<Footer />}>
+        <FormBlock onValuesChange={onFormChange} />
+        <div className="warnButton">
+          <div>{warningBlock}</div>
+          <Button
+            color="green"
+            variant="solid"
+            shape="round"
+            icon={<DownloadOutlined />}
+            size={'large'}
+            disabled={Boolean(scheduleResult?.warnings?.length)}
+          />
+        </div>
+
+        <TaskCalendarBlock schedule={scheduleResult} />
       </LayoutBlock>
     </ConfigProvider>
   );
