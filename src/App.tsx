@@ -28,14 +28,14 @@ export function App() {
   const success = () => {
     void messageApi.open({
       type: 'success',
-      content: 'This is a success message',
+      content: 'Календарь выгружен',
     });
   };
 
   const warning = () => {
     void messageApi.open({
       type: 'warning',
-      content: 'This is a warning message',
+      content: 'Не получилось выгрузить календарь',
     });
   };
 
