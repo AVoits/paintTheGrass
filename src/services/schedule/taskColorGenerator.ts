@@ -5,24 +5,24 @@ type TaskColorGenerator = {
   reset: () => void;
 };
 
+export const colorGroups = [
+  'blue',
+  'purple',
+  'cyan',
+  'green',
+  'magenta',
+  'red',
+  'orange',
+  'yellow',
+  'volcano',
+  'geekblue',
+  'lime',
+  'gold',
+] as const;
+
 export const createTaskColorGenerator = (
   token: ReturnType<typeof theme.useToken>['token'],
 ): TaskColorGenerator => {
-  const colorGroups = [
-    'blue',
-    'purple',
-    'cyan',
-    'green',
-    'magenta',
-    'red',
-    'orange',
-    'yellow',
-    'volcano',
-    'geekblue',
-    'lime',
-    'gold',
-  ] as const;
-
   // Собираем все оттенки каждой цветовой группы.
   const colors = colorGroups.flatMap((group) =>
     Array.from({ length: 10 }, (_, index) => ({
@@ -46,22 +46,26 @@ export const createTaskColorGenerator = (
     return result;
   };
 
-  const reset = () => {
+  const reset = (preservePreviousGroup = false) => {
     availableColors = shuffle(colors);
-    previousGroup = null;
+
+    if (!preservePreviousGroup) {
+      previousGroup = null;
+    }
   };
 
   const getNext = (): string => {
-    const candidates = availableColors.filter((item) => item.group !== previousGroup);
+    let candidates = availableColors.filter((item) => item.group !== previousGroup);
 
     if (!candidates.length) {
-      throw new Error('Все уникальные цвета текущего цикла закончились.');
+      reset(true);
+
+      candidates = availableColors.filter((item) => item.group !== previousGroup);
     }
 
     const selected = candidates[Math.floor(Math.random() * candidates.length)];
 
     availableColors = availableColors.filter((item) => item !== selected);
-
     previousGroup = selected.group;
 
     return selected.color;

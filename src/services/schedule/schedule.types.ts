@@ -1,5 +1,4 @@
 import { Dayjs } from 'dayjs';
-import { FormTaskInput } from '../../components/Form/Form.tsx';
 export type TaskInput = {
   name: string;
   duration: string;
@@ -50,7 +49,7 @@ export type ScheduleResult = {
   requestedHours: number;
   scheduledHours: number;
 
-  unscheduled: TaskInput[];
+  unscheduled: (TaskInput & { originalIndex: number })[];
   periodCalendar: PeriodCalendar;
 };
 
@@ -68,9 +67,21 @@ export type ScheduleFullResult = {
   requestedHours: number;
   scheduledHours: number;
 
-  unscheduled: TaskInput[];
+  unscheduled: (TaskInput & { originalIndex: number })[];
   periodCalendar: PeriodCalendar;
 
   periodStart: Dayjs;
   periodEnd: Dayjs;
+};
+
+export type DateTimeOffset = {
+  date: Dayjs;
+  hour: number;
+};
+
+export type RunAllocation = {
+  task: IndexedTask;
+  runIndex: number;
+  offset: number;
+  duration: number;
 };

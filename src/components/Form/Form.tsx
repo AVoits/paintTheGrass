@@ -1,15 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  Alert,
-  ColorPicker,
-  DatePicker,
-  DatePickerProps,
-  Divider,
-  FormProps,
-  Radio,
-  Tag,
-  theme,
-} from 'antd';
+import { Alert, ColorPicker, DatePicker, DatePickerProps, Divider, Radio, Tag, theme } from 'antd';
 import { Button, Form, Input } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
@@ -20,7 +10,6 @@ import { Dayjs } from 'dayjs';
 import { getProductionState } from '../../services/productionCalendar/helpers.ts';
 import { durationTaskOptions } from './form.const.ts';
 import { createTaskColorGenerator } from '../../services/schedule/taskColorGenerator.ts';
-import { FieldData } from '@rc-component/form/es/interface';
 import { Color } from 'antd/lib/color-picker';
 
 export type FormTaskInput = {
@@ -35,10 +24,12 @@ export type FieldType = {
 };
 
 interface FormBlockProps {
-  onValuesChange: (values: FieldType, isFormValid: boolean) => void;
+  initialValues: FieldType;
+  onValuesChange: (values: FieldType) => void;
+  unscheduledRows?: ReadonlySet<number>;
 }
 
-const FormBlock = ({ onValuesChange }: FormBlockProps) => {
+const FormBlock = ({ onValuesChange, initialValues, unscheduledRows }: FormBlockProps) => {
   const { token } = theme.useToken();
   const colorGenerator = useMemo(() => createTaskColorGenerator(token), [token]);
   const [form] = Form.useForm<FieldType>();
@@ -84,14 +75,14 @@ const FormBlock = ({ onValuesChange }: FormBlockProps) => {
     );
   };
 
-  const onFormChange = () => {
-    const isFormValid = form.getFieldsError().every(({ errors }) => errors.length === 0);
-    const formCurrent = form.getFieldsValue(true);
-    onValuesChange(formCurrent, isFormValid);
-  };
-
   return (
-    <Form<FieldType> autoComplete="off" className="form" form={form} onValuesChange={onFormChange}>
+    <Form<FieldType>
+      autoComplete="off"
+      className="form"
+      form={form}
+      initialValues={initialValues}
+      onValuesChange={(_, allValues) => onValuesChange(allValues)}
+    >
       <Form.Item<FieldType>
         label={'Спринт'}
         name={'sprint'}
@@ -101,18 +92,7 @@ const FormBlock = ({ onValuesChange }: FormBlockProps) => {
         <RangePicker style={{ width: '100%' }} format="DD/MM/YYYY" cellRender={cellRender} />
       </Form.Item>
       <Divider variant="solid" className="divider" />
-      <Form.List
-        name="tasks"
-        rules={[
-          {
-            validator: async (_, names) => {
-              if (!names || names.length < 1) {
-                return Promise.reject(new Error('Ну хоть одну задачу-то добавь!'));
-              }
-            },
-          },
-        ]}
-      >
+      <Form.List name="tasks">
         {(fields, { add, remove }, { errors }) => {
           const errorsBlock = errors.map((el, index) => (
             <Alert title={el} type="error" key={index} />
@@ -122,7 +102,12 @@ const FormBlock = ({ onValuesChange }: FormBlockProps) => {
             <>
               {fields.map(({ key, name, ...restField }, index) => (
                 <div key={key} className="block">
-                  <Tag variant="outlined">{index + 1}</Tag>
+                  <Tag
+                    variant={unscheduledRows?.has(name) ? 'solid' : 'outlined'}
+                    color={unscheduledRows?.has(name) ? 'red' : undefined}
+                  >
+                    {index + 1}
+                  </Tag>
                   <Form.Item
                     {...restField}
                     name={[name, 'name']}
@@ -161,12 +146,14 @@ const FormBlock = ({ onValuesChange }: FormBlockProps) => {
               <Form.Item className="addButton">
                 <Button
                   color="default"
-                  variant="solid"
+                  variant="outlined"
                   onClick={() => {
                     const color = colorGenerator.getNext();
                     add({ color });
                   }}
                   icon={<PlusOutlined />}
+                  size="large"
+                  block
                 >
                   Добавить задачу
                 </Button>
@@ -175,11 +162,7 @@ const FormBlock = ({ onValuesChange }: FormBlockProps) => {
           );
         }}
       </Form.List>
-      {/*<Form.Item label={null}>*/}
-      {/*  <Button htmlType="submit" color="green" variant="solid">*/}
-      {/*    Рассчитать календарь*/}
-      {/*  </Button>*/}
-      {/*</Form.Item>*/}
+      <Divider variant="solid" className="divider" />
     </Form>
   );
 };

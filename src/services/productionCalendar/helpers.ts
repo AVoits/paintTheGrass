@@ -46,35 +46,33 @@ export const getPeriodCalendar = (
     shortDays: new Set(),
   };
 
-  if (periodEnd?.isBefore(periodStart, 'day')) {
+  if (periodEnd.isBefore(periodStart, 'day')) {
     throw new Error('Дата окончания периода раньше даты начала.');
   }
 
-  let date = periodStart?.startOf('day');
-  const endDate = periodEnd?.startOf('day');
+  let date = periodStart.startOf('day');
+  const endDate = periodEnd.startOf('day');
 
-  while (date?.isBefore(endDate) || date?.isSame(endDate, 'day')) {
+  while (date.isBefore(endDate, 'day') || date.isSame(endDate, 'day')) {
     const yearKey = date.year().toString();
-    if (isCalendarYear(yearKey)) {
-      const year = calendar[yearKey];
-      const dateString = date.format('YYYY-MM-DD');
+    const year = calendar[yearKey as CalendarYear];
+    const dateString = date.format('YYYY-MM-DD');
 
-      if (year) {
-        if (year.holidays.includes(dateString)) {
-          result.holidays.add(dateString);
-        }
-
-        if (year?.workingWeekends?.includes(dateString)) {
-          result.workingWeekends.add(dateString);
-        }
-
-        if (year?.shortDays?.includes(dateString)) {
-          result.shortDays.add(dateString);
-        }
+    if (year) {
+      if (year.holidays.includes(dateString)) {
+        result.holidays.add(dateString);
       }
 
-      date = date.add(1, 'day');
+      if (year.workingWeekends?.includes(dateString)) {
+        result.workingWeekends.add(dateString);
+      }
+
+      if (year.shortDays?.includes(dateString)) {
+        result.shortDays.add(dateString);
+      }
     }
+
+    date = date.add(1, 'day');
   }
 
   return result;

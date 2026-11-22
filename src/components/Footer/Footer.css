@@ -1,4 +1,6 @@
 .gradient-line {
-  height: 1px;
-  background: linear-gradient(90deg, var(--ant-red), var(--ant-green));
+  height: 2px;
+  background: linear-gradient(90deg,  var(--ant-red), var(--ant-green));
+  width: 100%;
+  text-align: center;
 }

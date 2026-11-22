@@ -6,7 +6,7 @@ export interface ProductionCalendarYear {
   workingWeekends?: string[];
 }
 
-export type ProductionCalendarDataType = Record<CalendarYear, ProductionCalendarYear>;
+export type ProductionCalendarDataType = Record<string, ProductionCalendarYear>;
 
 export interface ProductionDataState {
   year: number;

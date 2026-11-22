@@ -1,10 +1,10 @@
 import { CalendarPeriod, RenderCellProps, TaskCalendar } from './TaskCalendar.tsx';
 import React, { useMemo } from 'react';
 import { ScheduledTask, ScheduleFullResult } from '../../services/schedule/schedule.types.ts';
-import { Empty, Tooltip } from 'antd';
+import { Empty, Tooltip, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { clsx } from 'clsx';
-
+const { Text } = Typography;
 interface TaskCalendarBlockProps {
   schedule?: ScheduleFullResult;
 }
@@ -97,7 +97,11 @@ const TaskCalendarBlock = ({ schedule }: TaskCalendarBlockProps) => {
                   className={clsx('bar', position)}
                   style={{ backgroundColor: event.color }}
                 >
-                  {showTitle && event.name}
+                  {showTitle && (
+                    <Text className="bar__tag" ellipsis={{ tooltip: `${event.name}` }}>
+                      {event.name}
+                    </Text>
+                  )}
                 </span>
               );
             })}
@@ -112,7 +116,7 @@ const TaskCalendarBlock = ({ schedule }: TaskCalendarBlockProps) => {
       {schedule ? (
         <TaskCalendar period={period} renderCell={renderCell} />
       ) : (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Заполните данные для расчета" />
       )}
     </div>
   );

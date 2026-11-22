@@ -4,76 +4,132 @@ import locale from 'antd/locale/ru_RU';
 import './App.css';
 import LayoutBlock from './components/Layout/Layout.tsx';
 import FormBlock, { FieldType } from './components/Form/Form.tsx';
-import { distributeTasks } from './services/schedule/schedule.ts';
+import { distributeTasks } from './services/schedule/distributeTasks.ts';
 import { ScheduleFullResult, TaskInput } from './services/schedule/schedule.types.ts';
 import TaskCalendarBlock from './components/TaskCalendar/TaskCalendarBlock.tsx';
 import Header from './components/Header/Header.tsx';
 import Footer from './components/Footer/Footer.tsx';
-import { Alert, Button, ConfigProvider } from 'antd';
+import { Alert, Button, ConfigProvider, message } from 'antd';
 import { themeConfig } from './themeConfig.ts';
 import { DownloadOutlined } from '@ant-design/icons';
+import { exportScheduleToIcs } from './services/export/IcsExporter.ts';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
+
+dayjs.locale('ru');
 
 export function App() {
-  const [formData, setFormData] = useState<FieldType>({
-    sprint: [],
+  const [messageApi, contextHolder] = message.useMessage();
+  const [formData, setFormData] = useState<FieldType>(() => ({
+    sprint: [dayjs(), dayjs()],
     tasks: [],
-  });
+  }));
 
-  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const success = () => {
+    void messageApi.open({
+      type: 'success',
+      content: 'This is a success message',
+    });
+  };
 
-  const scheduleResult = useMemo((): ScheduleFullResult | undefined => {
-    if (!isFormValid) {
+  const warning = () => {
+    void messageApi.open({
+      type: 'warning',
+      content: 'This is a warning message',
+    });
+  };
+
+  const scheduleResult = useMemo(():
+    (ScheduleFullResult & { unscheduledRows: ReadonlySet<number> }) | undefined => {
+    const [periodStart, periodEnd] = formData.sprint ?? [];
+
+    if (!periodStart?.isValid() || !periodEnd?.isValid()) {
       return undefined;
     }
 
-    const periodStart = formData?.sprint?.[0];
-    const periodEnd = formData?.sprint?.[1];
+    const taskRows = (formData.tasks ?? [])
+      .map((task, rowIndex) => ({ task, rowIndex }))
+      .filter(({ task }) => task.name?.trim() && task.duration);
 
-    const colorTasks: TaskInput[] = formData?.tasks?.map(({ color: colorSrc, duration, name }) => {
-      return {
-        duration,
-        name,
-        color: typeof colorSrc === 'string' ? colorSrc : colorSrc.toCssString(),
-      };
-    });
+    const tasks: TaskInput[] = taskRows.map(({ task: { name, duration, color } }) => ({
+      name: name.trim(),
+      duration,
+      color: typeof color === 'string' ? color : (color?.toCssString() ?? 'blue'),
+    }));
 
     const result = distributeTasks({
-      tasks: colorTasks?.filter((el) => Boolean(el.duration && el.name)),
+      tasks,
       periodStart,
       periodEnd,
     });
 
-    return { ...result, periodStart, periodEnd };
-  }, [formData.sprint, formData.tasks, isFormValid]);
+    return {
+      ...result,
+      periodStart,
+      periodEnd,
+      unscheduledRows: new Set(
+        result.unscheduled.map(({ originalIndex }) => taskRows[originalIndex].rowIndex),
+      ),
+    };
+  }, [formData]);
 
-  const onFormChange = (values: FieldType, isFormValid: boolean) => {
+  const onFormChange = (values: FieldType) => {
     setFormData(values);
-    setIsFormValid(isFormValid);
   };
 
-  const warningBlock = useMemo(() => {
-    if (!scheduleResult?.warnings?.length) {
-      return <Alert title={'Заполните данные для расчета'} type="success" />;
-    }
+  const hasTasks = formData.tasks.some((task) => task.name?.trim() && task.duration);
 
-    return scheduleResult?.warnings.map((warning, index) => {
-      return <Alert title={warning.message} type="error" key={index} />;
-    });
-  }, [scheduleResult]);
+  const isFullyDistributed =
+    hasTasks &&
+    Boolean(scheduleResult) &&
+    scheduleResult?.unscheduled.length === 0 &&
+    scheduleResult?.warnings.length === 0;
+
+  const warningBlock = scheduleResult?.warnings.length
+    ? scheduleResult.warnings.map((warning, index) => (
+        <Alert
+          title={warning.message}
+          type={warning.type === 'overflow' ? 'error' : 'warning'}
+          key={`${warning.type}-${index}`}
+        />
+      ))
+    : null;
+
+  const exportCalendar = () => {
+    if (scheduleResult) {
+      const { periodStart, periodEnd, tasks } = scheduleResult;
+      const startDate = periodStart.format('DD.MM.YYYY');
+      const endDate = periodEnd.format('DD.MM.YYYY');
+      exportScheduleToIcs(scheduleResult, `sprint_${startDate}-${endDate}_${tasks.length}.ics`);
+      success();
+    } else {
+      warning();
+    }
+  };
+
   return (
     <ConfigProvider locale={locale} theme={themeConfig}>
+      {contextHolder}
       <LayoutBlock header={<Header />} footer={<Footer />}>
-        <FormBlock onValuesChange={onFormChange} />
-        <div className="warnButton">
-          <div>{warningBlock}</div>
+        <FormBlock
+          onValuesChange={onFormChange}
+          initialValues={formData}
+          unscheduledRows={scheduleResult?.unscheduledRows}
+        />
+        <div className="actionWrapper">
+          <div className="warnButton">{warningBlock}</div>
           <Button
-            color="green"
+            className="downloadButton"
+            color={isFullyDistributed ? 'green' : 'orange'}
             variant="solid"
             shape="round"
             icon={<DownloadOutlined />}
-            size={'large'}
-            disabled={Boolean(scheduleResult?.warnings?.length)}
-          />
+            size="large"
+            disabled={!hasTasks || !scheduleResult}
+            onClick={exportCalendar}
+          >
+            iCalendar (.ics)
+          </Button>
         </div>
 
         <TaskCalendarBlock schedule={scheduleResult} />

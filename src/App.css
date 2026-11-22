@@ -1,5 +1,4 @@
 html {
-  color-scheme: dark;
   font-family: system-ui;
   display: flex;
   align-items: center;
@@ -16,8 +15,17 @@ body {
   width: 100%;
 }
 
+.actionWrapper {
+  display: flex;
+  justify-content: space-between;
+}
 
 .warnButton {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.downloadButton {
+  align-self: flex-end;
 }

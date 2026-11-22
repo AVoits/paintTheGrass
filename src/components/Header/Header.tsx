@@ -5,7 +5,7 @@ import './Header.css';
 
 const Header = () => {
   return (
-    <Flex gap="medium" align="center" justify="space-around">
+    <Flex gap="medium" align="center" justify="space-around" style={{ marginTop: 8 }}>
       <FormatPainterFilled className="iconRed" />
       <h1 className="gradient-text">Paint the grass</h1>
       <FormatPainterFilled className="iconGreen" />
